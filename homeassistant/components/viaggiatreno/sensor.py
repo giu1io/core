@@ -102,11 +102,8 @@ class ViaggiaTrenoSensor(SensorEntity):
         self._unit = ""
         self._icon = ICON
         self._station_id = station_id
+        self._train_id = train_id
         self._name = name
-
-        self.uri = VIAGGIATRENO_ENDPOINT.format(
-            station_id=station_id, train_id=train_id, timestamp=int(time.time()) * 1000
-        )
 
     @property
     def name(self):
@@ -132,6 +129,15 @@ class ViaggiaTrenoSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return extra attributes."""
         return self._attributes
+
+    @property
+    def uri(self):
+        """Return api uri with updated timestamp."""
+        return VIAGGIATRENO_ENDPOINT.format(
+            station_id=self._station_id,
+            train_id=self._train_id,
+            timestamp=int(time.time()) * 1000,
+        )
 
     @staticmethod
     def has_departed(data):
@@ -161,8 +167,7 @@ class ViaggiaTrenoSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Update state."""
-        uri = self.uri
-        res = await async_http_request(self.hass, uri)
+        res = await async_http_request(self.hass, self.uri)
         if res.get("error", ""):
             if res["error"] == 204:
                 self._state = NO_INFORMATION_STRING
